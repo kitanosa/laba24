@@ -15,8 +15,6 @@ typedef struct _Node
 Node *treeNodeCreate(void);
 Node *treeCopy(Node **node);
 Node *Zamena1(Node **node);
-int treeIsMinusNode(Node **node);
-int treeIsMinusNodeNum(Node **node);
 void treeBuild(Node **node, Stack *st);
 void treeDestroy(Node **node);
 void PKL(Node **node, const int level);
@@ -29,8 +27,8 @@ int isOpHigh(const char op1, const char op2);
 void postOrder(const char *str, Stack *st);
 
 Node *treeNodeCreate(void){
-	Node *tmpNode = (Node *)malloc(sizeof(Node));
-
+	Node *tmpNode = malloc(sizeof(Node));
+	
 	tmpNode->_varOp = '\0';
 	tmpNode->_num = 0.0;
 	tmpNode->_left = NULL;
