@@ -17,8 +17,7 @@ typedef struct _Node
 Node *treeNodeCreate(void);
 Node *treeCopy(Node **node);
 Node *Zamena1(Node **node);
-int treeIsMinusNode(Node **node);
-int treeIsMinusNodeNum(Node **node);
+int CheckLeftNode(Node **node);
 void treeBuild(Node **node, Stack *st);
 void treeDestroy(Node **node);
 void PKL(Node **node, const int level);
@@ -32,7 +31,7 @@ void postOrder(const char *str, Stack *st);
 
 Node *treeNodeCreate(void){
 	// Node * это возвращаемый тип данных
-	Node *tmpNode = (Node *)malloc(sizeof(Node));
+	Node *tmpNode = malloc(sizeof(Node));
 
 	tmpNode->_varOp = '\0';
 	// '\0' это нуль-символ Строковая константа — это последовательность символов, заключенная в кавычки, например: «Это строковая константа». В конце каждой строковой константы компилятор помещает ‘\0’ (нуль-символ), чтобы программе было возможно определить конец строки.
@@ -70,15 +69,16 @@ Node *treeCopy(Node **node){ // root2 = treeCopy(&root); а root мы взяли
 	*/
 }
 
-int treeIsMinusNode(Node **node){// эта функци проверяет если в ноде '-' и чтобы в левом ее потомке не было ни буквы ни числа ни знака
-	if (*node == NULL)	// мы вызываем ее из LKP treeIsMinusNode(node) где node = &root2
+int CheckLeftNode(Node **node){// проверяет пустой ли левый потомок
+	if (*node == NULL)	// ВНИМАНИЕ
 		return 0;
 
 	if ((*node)->_left == NULL || (*node)->_right == NULL)
 		return 0;
 
-	return ((*node)->_varOp == '-' && (*node)->_left->_varOp == '\0' && (*node)->_left->_num == 0.0);
+	return ((*node)->_left->_varOp == '\0' && (*node)->_left->_num == 0.0);
 }
+
 
 void treeBuild(Node **node, Stack *st){// построение дерева ( http://algolist.manual.ru/syntax/revpn.php )
 	Token token;
@@ -88,7 +88,7 @@ void treeBuild(Node **node, Stack *st){// построение дерева ( ht
 
 	token = stackTop(st); // token это верхний элемент стека
 
-	stackPop(st);// удаление верхнего элемента стека st
+	stackDelTop(st);// удаление верхнего элемента стека st
 
 	(*node) = treeNodeCreate(); // создание одной ноды
 	(*node)->_varOp = token._varOp; // запись в нолу сивола
@@ -112,7 +112,6 @@ void treeDestroy(Node **node){
 
 	free(*node);
 
-	*node = NULL;
 }
 
 void PKL(Node **node, const int level){ // печать исходного дерева
@@ -136,7 +135,7 @@ void LKP(Node **node){ // печать преобразованного выра
 	if (*node == NULL) // LKP(&root2); где root2 это корень преобразованного дерева
 		return;
 
-	if ((*node)->_left != NULL && !treeIsMinusNode(node)){
+	if ((*node)->_left != NULL && !CheckLeftNode(node)){
 	// if выше. Если левый потомок ненулевой(нахуя?) и в ноде НЕ "-" 
 		if ((*node)->_left->_left != NULL) // это по логике. Надо нарисовать дерево чтобы понять
 			printf("(");
@@ -214,9 +213,7 @@ void postOrder(const char *str, Stack *st){
 // postOrder(expr, &stPost);
 	// где expr это выражение с клавиатуры а stPost это структура
     
-	int i = 0, step = -1, isBracket = 0, isDot = 0;	// isBracket это скобка; is dot точка; step степень; i данный читаемый элемент
-
-	char tmpCh;
+	int i = 0, isBracket = 0;	// isBracket это скобка;  i данный читаемый элемент
 	// Token tk это структура с числом и букавками
 	Token tk; // tk это имя переменной структуры. По которой можно обращаться к структуре по точке
 	Stack stOp; // у нас два стека. st и st0p. st это стек вывода уже. А st0p он собирает элементы и сравнивает
@@ -228,30 +225,21 @@ void postOrder(const char *str, Stack *st){
 
 	while (str[i] != '\0'){	// пока строка не дошла до конца 
 		// что такое конструкция else if. if(key=2) else if(key = 3) else{}...  звучит так. Если ключ равно 2... если ключ равно 3... и во всех остальных случаях, то есть когда на 2 ни 3
-		if (str[i] == '.')
-			isDot = 1;
-		else if (isLetter(str[i])){ // если условие выполнено
+		if (isLetter(str[i])){ // если условие выполнено
 			// записываем в токен(var0p) значение: букву
 			// функция isLetter: return ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'));
 			tk._varOp = str[i];
-
 			stackPush(st, tk); 			// добавление элемента tk в стэк st
 		}
 		else if (isNumber(str[i])){
 			// записываем в токен(num) значение: число
 			tk._varOp = '\0';
+			// str[i] - '0'преобразует символ в позиции i в числовую цифру. Подробнее тут https://stackoverflow.com/questions/36942227/what-is-the-purpose-of-using-stri-0-where-str-is-a-string
+			tk._num = tk._num * 10.0 + str[i] - '0';
 
-			if (!isDot)
-				// str[i] - '0'преобразует символ в позиции i в числовую цифру. Подробнее тут https://stackoverflow.com/questions/36942227/what-is-the-purpose-of-using-stri-0-where-str-is-a-string
-				tk._num = tk._num * 10.0 + str[i] - '0';
-
-
-			if (str[i + 1] != '.' && !isNumber(str[i + 1])){ // !isNumber(str[i + 1] в данном случае означанет что функиця должна выдать нулик. Тогда сработает if. И еще! Тут баг в этой программе и если что, она работает ТОЛЬКО с целочисленнными значениями. Если попытаешься 5.5 например ввести то выйдет жопа
+			if (!isNumber(str[i + 1])){ // !isNumber(str[i + 1] в данном случае означанет что функиця должна выдать нулик. Тогда сработает if. 
 				stackPush(st, tk);
-
 				tk._num = 0.0;
-				step = -1;
-				isDot = 0;
 			}
 		}
 		else if (isOp(str[i])){// Пока непонятно. для операций + - ... Кажись это пошла Дейкстра
@@ -279,7 +267,7 @@ void postOrder(const char *str, Stack *st){
 				else
 					stackPush(st, stackTop(&stOp));// добавление в вывод элемента с приоритетом большим чем в элемента строчке
 
-				stackPop(&stOp); // удаление верхнего элемента
+				stackDelTop(&stOp); // удаление верхнего элемента
 			}
 
 			if (str[i] != ')')  // вот это не совсем понял зачем
@@ -291,7 +279,7 @@ void postOrder(const char *str, Stack *st){
 
 	while (!stackEmpty(&stOp)){ // если строчка закончилась но элементы в стеке st0p еще остались (данный вариант описан внизу в картинке в http://algolist.manual.ru/syntax/revpn.php) то мы добавляем этот элемент в выходную строку
 		stackPush(st, stackTop(&stOp));
-		stackPop(&stOp);
+		stackDelTop(&stOp);
 	}
 
 	stackDestroy(&stOp);
@@ -313,7 +301,7 @@ Node *Zamena1(Node **node){
 			tmpNode1->_num = 4;
 			(*node)->_right=tmpNode1;
 		}
-		else{ // зочем? Неясно. Наверное на случай если вдруг справа и слева не нул
+		else{ // в противном случае спускаемся вниз и ищем a
 			 Zamena1(&(*node)->_left);
 			 Zamena1(&(*node)->_right);
 		}
@@ -355,7 +343,7 @@ int main(void)
 				treeBuild(&root, &stPost); // node в качестве &root
 				stackDestroy(&stPost);  // удаляем  пустой стек чтобы не занимал место. Пустой он потому что мы из него построили дерево
 				root2 = treeCopy(&root);
-                Zamena1(&root2);
+                		Zamena1(&root2);
 				break;
 			}
 
