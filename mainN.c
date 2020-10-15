@@ -17,7 +17,6 @@ Node *treeNodeCreate(void);
 Node *treeCopy(Node **node);
 Node *Zamena1(Node **node);
 int CheckLeftNode(Node **node);
-int treeIsMinusNodeNum(Node **node);
 void treeBuild(Node **node, Stack *st);
 void treeDestroy(Node **node);
 void PKL(Node **node, const int level);
